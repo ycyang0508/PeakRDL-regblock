@@ -89,10 +89,36 @@ class DecodeLogicGenerator(RDLForLoopGenerator):
             a += f" + i{i}*'h{stride:x}"
         return a
 
+    def _gen_mem_array_stride(self, node:AddressableNode) -> []:
+        array_stride_stack = [];
+        array_dimensions_reverse = node.array_dimensions.copy();
+        array_dimensions_reverse.reverse();
+        array_stride_stack.append(node.array_stride)
+        for dim in range(len(array_dimensions_reverse)-1):
+            array_stride_stack.append(node.array_stride * array_dimensions_reverse[dim])        
+        array_stride_stack.reverse()
+        return array_stride_stack;
 
+    def _get_mem_address_str(self, node:AddressableNode) -> str:
+        a = f"'h{(node.raw_absolute_address - self.addr_decode.top_node.raw_absolute_address):x}"        
+        array_stride_stack = self._gen_mem_array_stride(node);        
+        for i, stride in enumerate(array_stride_stack):
+            a += f" + i{i}*'h{stride:x}"
+        return a
+
+    def _get_upper_mem_address_str(self, node:AddressableNode) -> str:
+        low_address = node.raw_absolute_address
+        mementries = node.get_property("mementries") 
+        membyte_per_entry = math.ceil(node.get_property("memwidth")/8);                 
+        array_stride_stack = self._gen_mem_array_stride(node);
+        a = f"'h{(node.raw_absolute_address - self.addr_decode.top_node.raw_absolute_address + membyte_per_entry * mementries):x}"
+        for i, stride in enumerate(array_stride_stack):
+            a += f" + i{i}*'h{stride:x}"
+        return a
+   
     def enter_Reg(self, node: RegNode) -> None:
         s = f"{self.addr_decode.get_access_strobe(node)} = cpuif_req_masked & (cpuif_addr == {self._get_address_str(node)});"
-        self.add_content(s)
+        self.add_content(s)         
 
 
     def exit_AddressableComponent(self, node: 'AddressableNode') -> None:
@@ -109,5 +135,5 @@ class DecodeLogicGenerator(RDLForLoopGenerator):
         mementries = node.get_property("mementries") 
         membyte_per_entry = math.ceil(node.get_property("memwidth")/8); 
         high_address = membyte_per_entry * mementries + low_address;
-        s = f"{self.addr_decode.get_access_strobe(node)} = cpuif_req_masked & (cpuif_addr >= {self._get_address_str(node)}) & (cpuif_addr <= 'h{high_address:x});"
+        s = f"{self.addr_decode.get_access_strobe(node)} = cpuif_req_masked & (cpuif_addr >= ({self._get_mem_address_str(node)})) &  (cpuif_addr <= ({self._get_upper_mem_address_str(node)}));"
         self.add_content(s)

@@ -174,7 +174,11 @@ class FieldLogicGenerator(RDLForLoopGenerator):
         s = f"// Memory: {node.inst_name}\n"
         s += f"always_comb begin\n"
         if node.is_sw_writable:            
-            s += f"\thwif_out.{node.inst_name}.write_en = decoded_reg_strb.{node.inst_name} && decoded_req_is_wr;\n"            
+            s += f"\thwif_out.{node.inst_name}.write_en = decoded_reg_strb.{node.inst_name}"
+            for i in range(0,len(node.array_dimensions)):                
+                s += f"[i{i}]"
+            #for i, stride in ):            
+            s += f" && decoded_req_is_wr;\n"
         else:
             s += f"\thwif_out.{node.inst_name}.write_en = 'b0;\n"            
         s += f"\thwif_out.{node.inst_name}.addr = cpuif_addr[{mem_addr_msb}:0];\n"

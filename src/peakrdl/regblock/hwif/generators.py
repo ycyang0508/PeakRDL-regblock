@@ -1,4 +1,5 @@
 from typing import TYPE_CHECKING
+from math   import log
 
 from systemrdl.node import FieldNode
 
@@ -70,6 +71,13 @@ class InputStructGenerator_Hier(RDLFlatStructGenerator):
     def exit_Field(self, node: 'FieldNode') -> None:
         self.pop_struct()
 
+    def enter_Mem(self, node: 'MemNode') -> None:
+        type_name = self.get_typdef_name(node)
+        self.push_struct(type_name, node.inst_name, node.array_dimensions)
+        self.add_member("dat",node.get_property("memwidth"))
+
+    def exit_Mem(self, node: 'MemNode') -> None:
+        self.pop_struct();
 
 class OutputStructGenerator_Hier(RDLFlatStructGenerator):
     def __init__(self, top_node: 'Node'):
@@ -112,6 +120,16 @@ class OutputStructGenerator_Hier(RDLFlatStructGenerator):
             if node.is_halt_reg:
                 self.add_member('halt')
         super().exit_Reg(node)
+
+    def enter_Mem(self, node: 'MemNode') -> None:
+        type_name = self.get_typdef_name(node)        
+        self.push_struct(type_name, node.inst_name, node.array_dimensions)
+        self.add_member("write_en", 1)
+        self.add_member("addr", int(log( node.get_property("mementries"),2)))
+        self.add_member("dat",node.get_property("memwidth"))
+
+    def exit_Mem(self, node: 'MemNode') -> None:
+        self.pop_struct();
 
 #-------------------------------------------------------------------------------
 class InputStructGenerator_TypeScope(InputStructGenerator_Hier):

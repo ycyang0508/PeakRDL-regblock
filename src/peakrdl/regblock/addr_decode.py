@@ -1,4 +1,5 @@
 from typing import TYPE_CHECKING, Union, List
+import math
 
 from systemrdl.node import AddrmapNode, AddressableNode, RegNode, FieldNode
 
@@ -44,6 +45,10 @@ class DecodeStructGenerator(RDLStructGenerator):
 
     def enter_Reg(self, node: 'RegNode') -> None:
         self.add_member(node.inst_name, array_dimensions=node.array_dimensions)
+
+    def enter_Mem(self, node: 'MemNode') -> None:
+        self.add_member(node.inst_name, array_dimensions=node.array_dimensions)
+
 
     # Stub out
     def exit_Reg(self, node: 'RegNode') -> None:
@@ -98,3 +103,11 @@ class DecodeLogicGenerator(RDLForLoopGenerator):
 
         for _ in node.array_dimensions:
             self._array_stride_stack.pop()
+
+    def enter_Mem(self, node: 'MemNode') -> None:
+        low_address = node.raw_absolute_address
+        mementries = node.get_property("mementries") 
+        membyte_per_entry = math.ceil(node.get_property("memwidth")/8); 
+        high_address = membyte_per_entry * mementries + low_address;
+        s = f"{self.addr_decode.get_access_strobe(node)} = cpuif_req_masked & (cpuif_addr >= {self._get_address_str(node)}) & (cpuif_addr <= 'h{high_address:x});"
+        self.add_content(s)

@@ -87,7 +87,20 @@ class ReadbackAssignmentGenerator(RDLForLoopGenerator):
                 self.add_content(f"assign readback_array[{self.current_offset_str}][{bus_width-1}:{current_bit}] = '0;")
 
             self.current_offset += 1
-
+    def enter_Mem(self, node: 'MemNode') -> None:
+        rd_strb = f"({self.exp.dereferencer.get_access_strobe(node)} && !decoded_req_is_wr)"            
+        if node.is_sw_readable:            
+            value  =  f"hwif_in.{node.inst_name}.dat"
+            self.add_content(f"assign readback_array[{self.current_offset_str}] = {rd_strb} ? {value} : '0;")
+        else:            
+            self.add_content(f"assign readback_array[{self.current_offset_str}] = 'd0;")        
+        current_bit = node.get_property("memwidth");
+        # Insert final reserved assignment if needed
+        bus_width = self.exp.cpuif.data_width
+        if current_bit < bus_width:
+            self.add_content(f"assign readback_array[{self.current_offset_str}][{bus_width-1}:{current_bit}] = '0;")                    
+        self.current_offset += 1
+		
     def push_loop(self, dim: int) -> None:
         super().push_loop(dim)
         self.start_offset_stack.append(self.current_offset)

@@ -1,4 +1,5 @@
 from typing import TYPE_CHECKING, List
+import math
 
 from collections import OrderedDict
 
@@ -57,7 +58,13 @@ class CombinationalStructGenerator(RDLStructGenerator):
         if self.field_logic.counter_decrsaturates(node):
             self.add_member('decrsaturate')
         else:
-            self.add_member('underflow')
+            self.add_member('underflow')    
+
+    def enter_Mem(self, node: 'MemNode') -> None:    
+        self.push_struct(node.inst_name)    
+        self.add_member("next", node.get_property("memwidth"))
+        self.add_member("load_next")
+        self.pop_struct()
 
 
 class FieldStorageStructGenerator(RDLStructGenerator):
@@ -160,7 +167,20 @@ class FieldLogicGenerator(RDLForLoopGenerator):
                 + "\n    || ".join(strs)
                 + ";"
             )
-
+    def enter_Mem(self, node: 'MemNode') -> None:    
+        mem_addr_lsb = math.log(node.raw_absolute_address,2);
+        mem_addr_msb = node.get_property("mementries")*math.ceil(node.get_property("memwidth")/8.0);
+        mem_addr_msb = int(math.log(mem_addr_msb,2));
+        s = f"// Memory: {node.inst_name}\n"
+        s += f"always_comb begin\n"
+        if node.is_sw_writable:            
+            s += f"\thwif_out.{node.inst_name}.write_en = decoded_reg_strb.{node.inst_name} && decoded_req_is_wr;\n"            
+        else:
+            s += f"\thwif_out.{node.inst_name}.write_en = 'b0;\n"            
+        s += f"\thwif_out.{node.inst_name}.addr = cpuif_addr[{mem_addr_msb}:0];\n"
+        s += f"\thwif_out.{node.inst_name}.dat  = decoded_wr_data;\n"    
+        s += f"end\n"    
+        self.add_content(s);
 
     def generate_field_storage(self, node: 'FieldNode') -> None:
         conditionals = self.field_logic.get_conditionals(node)

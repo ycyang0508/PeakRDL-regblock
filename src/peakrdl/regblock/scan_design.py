@@ -88,8 +88,14 @@ class DesignScanner(RDLListener):
             self.msg.error(
                 "Registers that have an accesswidth different from the register width are not supported yet",
                 node.inst.property_src_ref.get('accesswidth', node.inst.inst_src_ref)
-            )
-
+            )           
+    def enter_Mem(self, node: 'MemNode'):
+        regwidth = node.get_property('memwidth')
+        self.max_regwidth_stack[-1] = max(self.max_regwidth_stack[-1], regwidth)
+        # The CPUIF's bus width is sized according to the largest register in the design
+        # TODO: make this user-overridable once more flexible regwidth/accesswidths are supported
+        self.cpuif_data_width = max(self.cpuif_data_width, regwidth)        
+        
     def enter_AddressableComponent(self, node: AddressableNode) -> None:
         self.max_regwidth_stack.append(0)
 
@@ -112,11 +118,7 @@ class DesignScanner(RDLListener):
             )
 
     def enter_Component(self, node: 'Node') -> None:
-        if node.external and (node != self.exp.top_node):
-            self.msg.error(
-                "Exporter does not support external components",
-                node.inst.inst_src_ref
-            )
+        pass
 
     def enter_Signal(self, node: 'SignalNode') -> None:
         # If encountering a CPUIF reset that is nested within the register model,

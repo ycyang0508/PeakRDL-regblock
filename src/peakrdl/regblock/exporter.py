@@ -11,6 +11,7 @@ from .readback import Readback
 
 from .cpuif import CpuifBase
 from .cpuif.apb3 import APB3_Cpuif
+from .cpuif.axi4lite import AXI4Lite_Cpuif
 from .hwif import Hwif
 from .utils import get_always_ff_event
 from .scan_design import DesignScanner

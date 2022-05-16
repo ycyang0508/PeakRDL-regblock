@@ -175,8 +175,9 @@ class FieldLogicGenerator(RDLForLoopGenerator):
         s += f"always_comb begin\n"
         if node.is_sw_writable:            
             s += f"\thwif_out.{node.inst_name}.write_en = decoded_reg_strb.{node.inst_name}"
-            for i in range(0,len(node.array_dimensions)):                
-                s += f"[i{i}]"
+            if node.is_array == True:
+                for i in range(0,len(node.array_dimensions)):                
+                    s += f"[i{i}]"
             #for i, stride in ):            
             s += f" && decoded_req_is_wr;\n"
         else:

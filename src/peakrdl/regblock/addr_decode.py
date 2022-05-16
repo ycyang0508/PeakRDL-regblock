@@ -101,19 +101,21 @@ class DecodeLogicGenerator(RDLForLoopGenerator):
 
     def _get_mem_address_str(self, node:AddressableNode) -> str:
         a = f"'h{(node.raw_absolute_address - self.addr_decode.top_node.raw_absolute_address):x}"        
-        array_stride_stack = self._gen_mem_array_stride(node);        
-        for i, stride in enumerate(array_stride_stack):
-            a += f" + i{i}*'h{stride:x}"
+        if node.is_array == True:
+            array_stride_stack = self._gen_mem_array_stride(node);        
+            for i, stride in enumerate(array_stride_stack):
+                a += f" + i{i}*'h{stride:x}"
         return a
 
     def _get_upper_mem_address_str(self, node:AddressableNode) -> str:
         low_address = node.raw_absolute_address
         mementries = node.get_property("mementries") 
-        membyte_per_entry = math.ceil(node.get_property("memwidth")/8);                 
-        array_stride_stack = self._gen_mem_array_stride(node);
+        membyte_per_entry = math.ceil(node.get_property("memwidth")/8);                         
         a = f"'h{(node.raw_absolute_address - self.addr_decode.top_node.raw_absolute_address + membyte_per_entry * mementries):x}"
-        for i, stride in enumerate(array_stride_stack):
-            a += f" + i{i}*'h{stride:x}"
+        if node.is_array == True:
+            array_stride_stack = self._gen_mem_array_stride(node);
+            for i, stride in enumerate(array_stride_stack):
+                a += f" + i{i}*'h{stride:x}"
         return a
    
     def enter_Reg(self, node: RegNode) -> None:

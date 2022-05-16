@@ -47,7 +47,7 @@ class _TypedefStruct(_StructBase):
 
     def __str__(self) -> str:
         return (
-            "typedef struct {\n"
+            "typedef struct packed {\n"
             + super().__str__()
             + f"\n}} {self.type_name};"
         )

@@ -1,5 +1,5 @@
 from typing import TYPE_CHECKING
-from math   import log
+import math   
 
 from systemrdl.node import FieldNode
 
@@ -123,9 +123,10 @@ class OutputStructGenerator_Hier(RDLFlatStructGenerator):
 
     def enter_Mem(self, node: 'MemNode') -> None:
         type_name = self.get_typdef_name(node)        
+        totalbyte = node.get_property("mementries")*math.ceil(node.get_property("memwidth")/8.0)
         self.push_struct(type_name, node.inst_name, node.array_dimensions)
         self.add_member("write_en", 1)
-        self.add_member("addr", int(log( node.get_property("mementries"),2)))
+        self.add_member("addr", int(math.log(totalbyte,2)))
         self.add_member("dat",node.get_property("memwidth"))
 
     def exit_Mem(self, node: 'MemNode') -> None:

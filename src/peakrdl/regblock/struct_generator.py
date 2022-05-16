@@ -32,7 +32,7 @@ class _AnonymousStruct(_StructBase):
             suffix = ""
 
         return (
-            "struct {\n"
+            "struct packed {\n"
             + super().__str__()
             + f"\n}} {self.inst_name}{suffix};"
         )

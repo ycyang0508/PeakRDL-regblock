@@ -40,6 +40,16 @@ class AddressDecode:
         path = get_indexed_path(self.top_node, node)
         return "decoded_reg_strb." + path
 
+    def get_access(self, node: Union[RegNode, FieldNode]) -> str:
+        """
+        Returns the Verilog string that represents the register/field's access strobe.
+        """
+        if isinstance(node, FieldNode):
+            node = node.parent
+
+        path = get_indexed_path(self.top_node, node)
+        return path
+
 
 class DecodeStructGenerator(RDLStructGenerator):
 
@@ -137,5 +147,5 @@ class DecodeLogicGenerator(RDLForLoopGenerator):
         mementries = node.get_property("mementries") 
         membyte_per_entry = math.ceil(node.get_property("memwidth")/8); 
         high_address = membyte_per_entry * mementries + low_address;
-        s = f"{self.addr_decode.get_access_strobe(node)} = cpuif_req_masked & (cpuif_addr >= ({self._get_mem_address_str(node)})) &  (cpuif_addr <= ({self._get_upper_mem_address_str(node)}));"
+        s = f"{self.addr_decode.get_access_strobe(node)} = cpuif_req_masked & (cpuif_addr >= ({self._get_mem_address_str(node)})) &  (cpuif_addr < ({self._get_upper_mem_address_str(node)}));"
         self.add_content(s)

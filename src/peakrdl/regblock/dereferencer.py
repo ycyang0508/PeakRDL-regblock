@@ -201,6 +201,12 @@ class Dereferencer:
         """
         return self.address_decode.get_access_strobe(obj)
 
+    def get_access(self, obj: Union[RegNode, FieldNode]) -> str:
+        """
+        Returns the Verilog string that represents the register's access strobe
+        """
+        return self.address_decode.get_access(obj)
+
     def get_resetsignal(self, obj: Optional[SignalNode]) -> str:
         """
         Returns a normalized active-high reset signal

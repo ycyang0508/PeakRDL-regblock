@@ -168,7 +168,8 @@ class FieldLogicGenerator(RDLForLoopGenerator):
                 + ";"
             )
     def enter_Mem(self, node: 'MemNode') -> None:    
-        mem_addr_lsb = math.log(node.raw_absolute_address,2);
+        mem_addr_lsb = math.ceil(node.get_property("memwidth")/8.0);
+        mem_addr_lsb = int(math.log2(mem_addr_lsb));
         mem_addr_msb = node.get_property("mementries")*math.ceil(node.get_property("memwidth")/8.0);
         mem_addr_msb = int(math.log(mem_addr_msb,2));
         s = f"// Memory: {node.inst_name}\n"
@@ -182,7 +183,7 @@ class FieldLogicGenerator(RDLForLoopGenerator):
             s += f" && decoded_req_is_wr;\n"
         else:
             s += f"\thwif_out.{node.inst_name}.write_en = 'b0;\n"            
-        s += f"\thwif_out.{node.inst_name}.addr = cpuif_addr[{mem_addr_msb}:0];\n"
+        s += f"\thwif_out.{node.inst_name}.addr = cpuif_addr[{mem_addr_msb}:{mem_addr_lsb}];\n"
         s += f"\thwif_out.{node.inst_name}.dat  = decoded_wr_data;\n"    
         s += f"end\n"    
         self.add_content(s);

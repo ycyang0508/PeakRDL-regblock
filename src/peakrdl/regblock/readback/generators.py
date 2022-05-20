@@ -89,8 +89,9 @@ class ReadbackAssignmentGenerator(RDLForLoopGenerator):
             self.current_offset += 1
     def enter_Mem(self, node: 'MemNode') -> None:
         rd_strb = f"({self.exp.dereferencer.get_access_strobe(node)} && !decoded_req_is_wr)"            
-        if node.is_sw_readable:            
-            value  =  f"hwif_in.{node.inst_name}.dat"
+        if node.is_sw_readable:  
+            inst_name  = self.exp.dereferencer.get_access(node)
+            value  =  f"hwif_in.{inst_name}.dat"
             self.add_content(f"assign readback_array[{self.current_offset_str}] = {rd_strb} ? {value} : '0;")
         else:            
             self.add_content(f"assign readback_array[{self.current_offset_str}] = 'd0;")        

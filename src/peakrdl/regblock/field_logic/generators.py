@@ -171,20 +171,18 @@ class FieldLogicGenerator(RDLForLoopGenerator):
         mem_addr_lsb = math.ceil(node.get_property("memwidth")/8.0);
         mem_addr_lsb = int(math.log2(mem_addr_lsb));
         mem_addr_msb = node.get_property("mementries")*math.ceil(node.get_property("memwidth")/8.0);
-        mem_addr_msb = int(math.log(mem_addr_msb,2));
+        mem_addr_msb = int(math.log(mem_addr_msb,2)-1);
+        inst_name  = self.exp.dereferencer.get_access(node);
         s = f"// Memory: {node.inst_name}\n"
         s += f"always_comb begin\n"
         if node.is_sw_writable:            
-            s += f"\thwif_out.{node.inst_name}.write_en = decoded_reg_strb.{node.inst_name}"
-            if node.is_array == True:
-                for i in range(0,len(node.array_dimensions)):                
-                    s += f"[i{i}]"
+            s += f"\thwif_out.{inst_name}.write_en = decoded_reg_strb.{inst_name}"            
             #for i, stride in ):            
             s += f" && decoded_req_is_wr;\n"
         else:
-            s += f"\thwif_out.{node.inst_name}.write_en = 'b0;\n"            
-        s += f"\thwif_out.{node.inst_name}.addr = cpuif_addr[{mem_addr_msb}:{mem_addr_lsb}];\n"
-        s += f"\thwif_out.{node.inst_name}.dat  = decoded_wr_data;\n"    
+            s += f"\thwif_out.{inst_name}.write_en = 'b0;\n"                      
+        s += f"\thwif_out.{inst_name}.addr = cpuif_addr[{mem_addr_msb}:{mem_addr_lsb}];\n"
+        s += f"\thwif_out.{inst_name}.dat  = decoded_wr_data;\n"    
         s += f"end\n"    
         self.add_content(s);
 

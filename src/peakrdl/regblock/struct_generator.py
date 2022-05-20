@@ -55,11 +55,11 @@ class _TypedefStruct(_StructBase):
     @property
     def instantiation(self) -> str:
         if self.array_dimensions:
-            suffix = "[" + "][".join((str(n) for n in self.array_dimensions)) + "]"
+            suffix = "[" + "][".join((str(n-1)+":0" for n in self.array_dimensions)) + "]"
         else:
             suffix = ""
 
-        return f"{self.type_name} {self.inst_name}{suffix};"
+        return f"{self.type_name} {suffix} {self.inst_name};"
 
 #-------------------------------------------------------------------------------
 
@@ -80,14 +80,14 @@ class StructGenerator:
 
     def add_member(self, name: str, width: int = 1, array_dimensions: Optional[List[int]] = None) -> None:
         if array_dimensions:
-            suffix = "[" + "][".join((str(n) for n in array_dimensions)) + "]"
+            suffix = "[" + "][".join((str(n-1)+":0" for n in array_dimensions)) + "]"
         else:
             suffix = ""
 
         if width == 1:
-            m = f"logic {name}{suffix};"
+            m = f"logic {suffix}{name};"
         else:
-            m = f"logic [{width-1}:0] {name}{suffix};"
+            m = f"logic {suffix}[{width-1}:0] {name};"
         self.current_struct.children.append(m)
 
 
